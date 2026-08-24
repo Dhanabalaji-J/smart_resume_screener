@@ -87,7 +87,7 @@ function RayAssistant({ resume, jobDescription }) {
 
 
             const response = await axios.post(
-                "http://localhost:5000/api/resume/upload",
+                `${import.meta.env.VITE_API_URL}/api/resume/upload`,
                 formData
             );
 
@@ -189,7 +189,7 @@ function RayAssistant({ resume, jobDescription }) {
         try {
 
             const response = await axios.post(
-                "http://localhost:5000/api/ray/chat",
+                `${import.meta.env.VITE_API_URL}/api/ray/chat`,
                 {
                     question: userQuestion,
 

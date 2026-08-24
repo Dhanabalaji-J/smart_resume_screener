@@ -111,7 +111,7 @@ function ScreeningForm({
 
             const uploadResponse =
                 await axios.post(
-                    "http://localhost:5000/api/resume/upload",
+                    `${import.meta.env.VITE_API_URL}/api/resume/upload`,
                     formData
                 );
 
@@ -135,7 +135,7 @@ function ScreeningForm({
 
             const matchResponse =
                 await axios.post(
-                    "http://localhost:5000/api/job/match",
+                    `${import.meta.env.VITE_API_URL}/api/job/match`,
                     {
                         name: resumeFile.name
                             .replace(/\.pdf$/i, ""),
