@@ -250,12 +250,12 @@ function App() {
                     <div>
 
                         <h1>
-                            Recruitment Dashboard
+                            AI Resume Screener
                         </h1>
 
                         <p>
-                            AI-powered resume screening
-                            and candidate matching.
+                            Analyze resumes with AI, evaluate skills and experience,
+                            and match candidates to job requirements.
                         </p>
 
                     </div>
