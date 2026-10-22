@@ -97,36 +97,29 @@ function ScreeningForm({
             setLoading(true);
 
 
-            // =====================================
-            // STEP 1: UPLOAD RESUME
-            // =====================================
+           
+const formData = new FormData();
+formData.append("resume", resumeFile);
 
-            const formData = new FormData();
+const API_URL = import.meta.env.VITE_API_URL;
 
-            formData.append(
-                "resume",
-                resumeFile
-            );
+if (!API_URL) {
+    throw new Error(
+        "VITE_API_URL is missing. Check frontend/.env."
+    );
+}
 
+const uploadResponse = await axios.post(
+    `${API_URL}/api/resume/upload`,
+    formData
+);
 
-            const uploadResponse =
-                await axios.post(
-                    `${import.meta.env.VITE_API_URL}/api/resume/upload`,
-                    formData
-                );
+const parsedResume = uploadResponse.data.parsedResume;
 
+if (!parsedResume) {
+    throw new Error("Resume parsing failed.");
+}
 
-            const parsedResume =
-                uploadResponse.data.parsedResume;
-
-
-            if (!parsedResume) {
-
-                throw new Error(
-                    "Resume parsing failed."
-                );
-
-            }
 
 
             // =====================================

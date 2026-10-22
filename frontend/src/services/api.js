@@ -1,7 +1,16 @@
+
 import axios from "axios";
 
+const API_URL = import.meta.env.VITE_API_URL;
+
+if (!API_URL) {
+    console.error(
+        "VITE_API_URL is missing. Check your frontend/.env file."
+    );
+}
+
 const API = axios.create({
-    baseURL: `${import.meta.env.VITE_API_URL}/api`
+    baseURL: `${API_URL}/api`,
 });
 
 export const getCandidates = async () => {
