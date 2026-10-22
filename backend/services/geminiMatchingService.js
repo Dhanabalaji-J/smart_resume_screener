@@ -1,12 +1,63 @@
+
 const { GoogleGenAI } = require("@google/genai");
 
 const ai = new GoogleGenAI({
-    apiKey: process.env.GEMINI_API_KEY
+    apiKey: process.env.GEMINI_API_KEY,
 });
 
+const sleep = (ms) =>
+    new Promise((resolve) => setTimeout(resolve, ms));
+
+function isRetryableError(error) {
+    const status = Number(error?.status ?? error?.code);
+
+    return (
+        status === 429 ||
+        status === 500 ||
+        status === 502 ||
+        status === 503 ||
+        status === 504 ||
+        /high demand|temporarily unavailable|overloaded|resource exhausted/i.test(
+            error?.message || ""
+        )
+    );
+}
+
+async function generateContentWithRetry(
+    model,
+    contents,
+    maxAttempts = 3
+) {
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+        try {
+            return await ai.models.generateContent({
+                model,
+                contents,
+            });
+        } catch (error) {
+            const shouldRetry =
+                isRetryableError(error) &&
+                attempt < maxAttempts;
+
+            if (!shouldRetry) {
+                throw error;
+            }
+
+            const delayMs = 1000 * 2 ** (attempt - 1);
+
+            console.warn(
+                `Gemini request failed (attempt ${attempt}/${maxAttempts}). ` +
+                `Retrying in ${delayMs}ms. Status: ${error?.status ?? error?.code ?? "unknown"}`
+            );
+
+            await sleep(delayMs);
+        }
+    }
+
+    throw new Error("Gemini request failed after all retry attempts.");
+}
 
 async function matchResumeWithJob(resume, jobDescription) {
-
     const prompt = `
 You are an AI recruitment assistant.
 
@@ -22,13 +73,13 @@ Analyze the candidate based on:
 CANDIDATE RESUME:
 
 Skills:
-${resume.skills.join(", ")}
+${(resume.skills || []).join(", ")}
 
 Experience:
-${resume.experience.join("\n")}
+${(resume.experience || []).join("\n")}
 
 Education:
-${resume.education.join("\n")}
+${(resume.education || []).join("\n")}
 
 JOB DESCRIPTION:
 
@@ -60,23 +111,45 @@ Rules:
 - Return JSON only.
 `;
 
-    const response = await ai.models.generateContent({
-        model: "gemini-3.6-flash",
-        contents: prompt
-    });
+    const response = await generateContentWithRetry(
+        "gemini-3.6-flash",
+        prompt,
+        3
+    );
 
-    const text = response.text.trim();
+    const text =
+        typeof response.text === "function"
+            ? response.text()
+            : response.text;
+
+    if (!text || !text.trim()) {
+        throw new Error("Gemini returned an empty response.");
+    }
 
     const cleanedText = text
-        .replace(/^```json/i, "")
-        .replace(/^```/i, "")
-        .replace(/```$/i, "")
+        .replace(/^```json\s*/i, "")
+        .replace(/^```\s*/i, "")
+        .replace(/\s*```$/i, "")
         .trim();
 
-    return JSON.parse(cleanedText);
+    try {
+        const result = JSON.parse(cleanedText);
+
+        if (
+            typeof result.matchScore !== "number" ||
+            !Array.isArray(result.matchingSkills) ||
+            !Array.isArray(result.missingSkills)
+        ) {
+            throw new Error("Gemini returned an unexpected JSON structure.");
+        }
+
+        return result;
+    } catch (error) {
+        console.error("Failed to parse Gemini matching response:", error.message);
+        throw new Error("Unable to parse the AI matching result.");
+    }
 }
 
-
 module.exports = {
-    matchResumeWithJob
+    matchResumeWithJob,
 };
