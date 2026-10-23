@@ -13,7 +13,12 @@ import RayAssistant from "./components/RayAssistant";
 import "./App.css";
 
 
-function App() {\n\n    const [sessionToken, setSessionToken] = useState(() => getToken());\n    const [user, setUser] = useState(() => getUser());\n    const [historyLoading, setHistoryLoading] = useState(false);\n    const [historyError, setHistoryError] = useState("");
+function App() {
+
+    const [sessionToken, setSessionToken] = useState(() => getToken());
+    const [user, setUser] = useState(() => getUser());
+    const [historyLoading, setHistoryLoading] = useState(false);
+    const [historyError, setHistoryError] = useState("");
 
     // =========================================
     // CURRENT SESSION CANDIDATES
