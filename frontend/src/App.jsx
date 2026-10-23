@@ -263,6 +263,78 @@ function App() {
                 </div>
 
 
+                {/* PREMIUM INTRO / HERO */}
+                <section className="hero-panel" aria-labelledby="hero-title">
+                    <div className="hero-copy">
+                        <div className="hero-kicker">
+                            <span className="hero-kicker-dot" />
+                            AI-POWERED TALENT INTELLIGENCE
+                        </div>
+                        <h2 id="hero-title">
+                            Find the right talent.
+                            <span> Make every match count.</span>
+                        </h2>
+                        <p>
+                            Turn resumes into clear, actionable insights.
+                            Compare skills, experience, and education in one
+                            simple screening workspace.
+                        </p>
+                        <div className="hero-actions">
+                            <button
+                                type="button"
+                                className="hero-primary"
+                                onClick={() => handleNavigation("screen")}
+                            >
+                                Start screening <span aria-hidden="true">↗</span>
+                            </button>
+                            <button
+                                type="button"
+                                className="hero-secondary"
+                                onClick={() => handleNavigation("analytics")}
+                            >
+                                Explore analytics
+                            </button>
+                        </div>
+                        <div className="hero-capabilities">
+                            <span><b>✓</b> Resume parsing</span>
+                            <span><b>✓</b> Skill comparison</span>
+                            <span><b>✓</b> AI insights</span>
+                        </div>
+                    </div>
+
+                    <div className="hero-visual" aria-label="Illustration of AI-powered resume analysis">
+                        <div className="hero-orbit orbit-one" />
+                        <div className="hero-orbit orbit-two" />
+                        <div className="hero-orb">
+                            <span className="orb-core">✦</span>
+                        </div>
+                        <div className="hero-float-card resume-float">
+                            <div className="float-card-icon">▤</div>
+                            <div className="float-card-copy">
+                                <strong>Resume parsed</strong>
+                                <span>Skills · Experience · Education</span>
+                            </div>
+                            <span className="float-check">✓</span>
+                        </div>
+                        <div className="hero-float-card insight-float">
+                            <div className="insight-heading">
+                                <span className="insight-spark">✧</span>
+                                <strong>AI insights</strong>
+                            </div>
+                            <div className="insight-line line-long" />
+                            <div className="insight-line line-medium" />
+                            <div className="insight-line line-short" />
+                            <div className="insight-tags">
+                                <span>Skills</span><span>Fit</span><span>Growth</span>
+                            </div>
+                        </div>
+                        <div className="hero-visual-caption">
+                            <span className="caption-pulse" />
+                            Intelligent screening, made simple
+                        </div>
+                    </div>
+                </section>
+
                 {/* =================================
                     STATS
                 ================================= */}
