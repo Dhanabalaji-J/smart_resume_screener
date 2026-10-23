@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../services/session";
 
 function RayAssistant({ resume, jobDescription }) {
 
@@ -86,8 +86,8 @@ function RayAssistant({ resume, jobDescription }) {
             );
 
 
-            const response = await axios.post(
-                `${import.meta.env.VITE_API_URL}/api/resume/upload`,
+            const response = await api.post(
+                "/resume/upload",
                 formData
             );
 
@@ -188,8 +188,8 @@ function RayAssistant({ resume, jobDescription }) {
 
         try {
 
-            const response = await axios.post(
-                `${import.meta.env.VITE_API_URL}/api/ray/chat`,
+            const response = await api.post(
+                "/ray/chat",
                 {
                     question: userQuestion,
 
