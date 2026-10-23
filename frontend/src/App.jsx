@@ -1,4 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import AuthPage from "./components/AuthPage";
+import api, { clearSession, getToken, getUser, saveSession } from "./services/session";
 
 import Navbar from "./components/Navbar";
 import StatsCards from "./components/StatsCards";
@@ -11,7 +13,7 @@ import RayAssistant from "./components/RayAssistant";
 import "./App.css";
 
 
-function App() {
+function App() {\n\n    const [sessionToken, setSessionToken] = useState(() => getToken());\n    const [user, setUser] = useState(() => getUser());\n    const [historyLoading, setHistoryLoading] = useState(false);\n    const [historyError, setHistoryError] = useState("");
 
     // =========================================
     // CURRENT SESSION CANDIDATES
