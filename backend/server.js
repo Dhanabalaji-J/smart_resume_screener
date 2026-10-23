@@ -8,6 +8,7 @@ const jobRoutes = require("./routes/jobRoutes");
 const connectDB = require("./config/db");
 const candidateRoutes = require("./routes/candidateRoutes");
 const rayRoutes = require("./routes/rayRoutes");
+const authRoutes = require("./routes/authRoutes");
 
 const app = express();
 
@@ -21,6 +22,7 @@ app.use(cors());
 app.use(express.json());
 
 // Routes
+app.use("/api/auth", authRoutes);
 app.use("/api/resume", resumeRoutes);
 app.use("/api/job", jobRoutes);
 app.use("/api/candidates", candidateRoutes);
