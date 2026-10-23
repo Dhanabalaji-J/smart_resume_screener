@@ -3,6 +3,9 @@ const express = require("express");
 const router = express.Router();
 
 const geminiService = require("../services/geminiService");
+const authenticateToken = require("../middleware/authenticateToken");
+
+router.use(authenticateToken);
 
 console.log("Gemini service loaded from:");
 console.log(require.resolve("../services/geminiService"));

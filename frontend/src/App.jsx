@@ -1,4 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import AuthPage from "./components/AuthPage";
+import api, { clearSession, getToken, getUser, saveSession } from "./services/session";
 
 import Navbar from "./components/Navbar";
 import StatsCards from "./components/StatsCards";
@@ -12,6 +14,11 @@ import "./App.css";
 
 
 function App() {
+
+    const [sessionToken, setSessionToken] = useState(() => getToken());
+    const [user, setUser] = useState(() => getUser());
+    const [historyLoading, setHistoryLoading] = useState(false);
+    const [historyError, setHistoryError] = useState("");
 
     // =========================================
     // CURRENT SESSION CANDIDATES
@@ -63,6 +70,79 @@ function App() {
     // =========================================
     // NAVIGATION
     // =========================================
+
+    useEffect(() => {
+        if (!sessionToken || !user) return undefined;
+        let active = true;
+        setHistoryLoading(true);
+        api.get("/candidates")
+            .then(({ data }) => {
+                if (active) setCandidates((data.candidates || []).map((item) => ({
+                    ...item,
+                    _id: item._id,
+                    analysis: item.analysis || {}
+                })));
+            })
+            .catch((error) => {
+                if (!active) return;
+                if (error.response?.status === 401) {
+                    clearSession();
+                    setSessionToken(null);
+                    setUser(null);
+                } else {
+                    setHistoryError(error.response?.data?.message || "Couldn't load your saved screening history.");
+                }
+            })
+            .finally(() => { if (active) setHistoryLoading(false); });
+        return () => { active = false; };
+    }, [sessionToken, user?.id]);
+
+    const handleAuthenticated = (session) => {
+        saveSession(session);
+        setSessionToken(session.token);
+        setUser(session.user);
+        setCandidates([]);
+        setHistoryError("");
+    };
+
+    const handleLogout = () => {
+        clearSession();
+        setSessionToken(null);
+        setUser(null);
+        setCandidates([]);
+        setAnalysisResult(null);
+        setSelectedCandidate(null);
+        setCurrentResume(null);
+        setCurrentJobDescription("");
+        setActiveSection("dashboard");
+    };
+
+    const handleClearData = async () => {
+        if (!window.confirm("Clear all saved screening history for this account? This cannot be undone.")) return;
+        try {
+            await api.delete("/auth/data");
+            setCandidates([]);
+            setAnalysisResult(null);
+            setSelectedCandidate(null);
+            setCurrentResume(null);
+            setCurrentJobDescription("");
+            setHistoryError("");
+            window.alert("Your screening history has been cleared.");
+        } catch (error) {
+            window.alert(error.response?.data?.message || "Couldn't clear screening history.");
+        }
+    };
+
+    const handleDeleteAccount = async () => {
+        if (!window.confirm("Permanently delete your account and all saved screening records? This cannot be undone.")) return;
+        if (!window.confirm("Final confirmation: delete this account and its saved data now?")) return;
+        try {
+            await api.delete("/auth/account");
+            handleLogout();
+        } catch (error) {
+            window.alert(error.response?.data?.message || "Couldn't delete your account.");
+        }
+    };
 
     const handleNavigation = (section) => {
 
@@ -187,6 +267,7 @@ function App() {
 
                 _id:
                     data.candidate?._id ||
+                    data.candidateId ||
                     Date.now().toString(),
 
                 name:
@@ -219,6 +300,10 @@ function App() {
     // RETURN
     // =========================================
 
+    if (!sessionToken || !user) {
+        return <AuthPage onAuthenticated={handleAuthenticated} />;
+    }
+
     return (
 
         <div className="app">
@@ -231,6 +316,10 @@ function App() {
             <Navbar
                 activeSection={activeSection}
                 onNavigate={handleNavigation}
+                user={user}
+                onLogout={handleLogout}
+                onClearData={handleClearData}
+                onDeleteAccount={handleDeleteAccount}
             />
 
 
@@ -263,10 +352,84 @@ function App() {
                 </div>
 
 
+                {/* PREMIUM INTRO / HERO */}
+                <section className="hero-panel" aria-labelledby="hero-title">
+                    <div className="hero-copy">
+                        <div className="hero-kicker">
+                            <span className="hero-kicker-dot" />
+                            AI-POWERED TALENT INTELLIGENCE
+                        </div>
+                        <h2 id="hero-title">
+                            Find the right talent.
+                            <span> Make every match count.</span>
+                        </h2>
+                        <p>
+                            Turn resumes into clear, actionable insights.
+                            Compare skills, experience, and education in one
+                            simple screening workspace.
+                        </p>
+                        <div className="hero-actions">
+                            <button
+                                type="button"
+                                className="hero-primary"
+                                onClick={() => handleNavigation("screen")}
+                            >
+                                Start screening <span aria-hidden="true">↗</span>
+                            </button>
+                            <button
+                                type="button"
+                                className="hero-secondary"
+                                onClick={() => handleNavigation("analytics")}
+                            >
+                                Explore analytics
+                            </button>
+                        </div>
+                        <div className="hero-capabilities">
+                            <span><b>✓</b> Resume parsing</span>
+                            <span><b>✓</b> Skill comparison</span>
+                            <span><b>✓</b> AI insights</span>
+                        </div>
+                    </div>
+
+                    <div className="hero-visual" aria-label="Illustration of AI-powered resume analysis">
+                        <div className="hero-orbit orbit-one" />
+                        <div className="hero-orbit orbit-two" />
+                        <div className="hero-orb">
+                            <span className="orb-core">✦</span>
+                        </div>
+                        <div className="hero-float-card resume-float">
+                            <div className="float-card-icon">▤</div>
+                            <div className="float-card-copy">
+                                <strong>Resume parsed</strong>
+                                <span>Skills · Experience · Education</span>
+                            </div>
+                            <span className="float-check">✓</span>
+                        </div>
+                        <div className="hero-float-card insight-float">
+                            <div className="insight-heading">
+                                <span className="insight-spark">✧</span>
+                                <strong>AI insights</strong>
+                            </div>
+                            <div className="insight-line line-long" />
+                            <div className="insight-line line-medium" />
+                            <div className="insight-line line-short" />
+                            <div className="insight-tags">
+                                <span>Skills</span><span>Fit</span><span>Growth</span>
+                            </div>
+                        </div>
+                        <div className="hero-visual-caption">
+                            <span className="caption-pulse" />
+                            Intelligent screening, made simple
+                        </div>
+                    </div>
+                </section>
+
                 {/* =================================
                     STATS
                 ================================= */}
 
+                {historyError && <div className="history-notice" role="status">{historyError}</div>}
+                {historyLoading && <div className="history-loading"><span className="auth-spinner" /> Loading your saved screening history…</div>}
                 <StatsCards
                     candidates={candidates}
                 />
