@@ -71,6 +71,79 @@ function App() {
     // NAVIGATION
     // =========================================
 
+    useEffect(() => {
+        if (!sessionToken || !user) return undefined;
+        let active = true;
+        setHistoryLoading(true);
+        api.get("/candidates")
+            .then(({ data }) => {
+                if (active) setCandidates((data.candidates || []).map((item) => ({
+                    ...item,
+                    _id: item._id,
+                    analysis: item.analysis || {}
+                })));
+            })
+            .catch((error) => {
+                if (!active) return;
+                if (error.response?.status === 401) {
+                    clearSession();
+                    setSessionToken(null);
+                    setUser(null);
+                } else {
+                    setHistoryError(error.response?.data?.message || "Couldn't load your saved screening history.");
+                }
+            })
+            .finally(() => { if (active) setHistoryLoading(false); });
+        return () => { active = false; };
+    }, [sessionToken, user?.id]);
+
+    const handleAuthenticated = (session) => {
+        saveSession(session);
+        setSessionToken(session.token);
+        setUser(session.user);
+        setCandidates([]);
+        setHistoryError("");
+    };
+
+    const handleLogout = () => {
+        clearSession();
+        setSessionToken(null);
+        setUser(null);
+        setCandidates([]);
+        setAnalysisResult(null);
+        setSelectedCandidate(null);
+        setCurrentResume(null);
+        setCurrentJobDescription("");
+        setActiveSection("dashboard");
+    };
+
+    const handleClearData = async () => {
+        if (!window.confirm("Clear all saved screening history for this account? This cannot be undone.")) return;
+        try {
+            await api.delete("/auth/data");
+            setCandidates([]);
+            setAnalysisResult(null);
+            setSelectedCandidate(null);
+            setCurrentResume(null);
+            setCurrentJobDescription("");
+            setHistoryError("");
+            window.alert("Your screening history has been cleared.");
+        } catch (error) {
+            window.alert(error.response?.data?.message || "Couldn't clear screening history.");
+        }
+    };
+
+    const handleDeleteAccount = async () => {
+        if (!window.confirm("Permanently delete your account and all saved screening records? This cannot be undone.")) return;
+        if (!window.confirm("Final confirmation: delete this account and its saved data now?")) return;
+        try {
+            await api.delete("/auth/account");
+            handleLogout();
+        } catch (error) {
+            window.alert(error.response?.data?.message || "Couldn't delete your account.");
+        }
+    };
+
     const handleNavigation = (section) => {
 
         setActiveSection(section);
@@ -194,6 +267,7 @@ function App() {
 
                 _id:
                     data.candidate?._id ||
+                    data.candidateId ||
                     Date.now().toString(),
 
                 name:
@@ -226,6 +300,10 @@ function App() {
     // RETURN
     // =========================================
 
+    if (!sessionToken || !user) {
+        return <AuthPage onAuthenticated={handleAuthenticated} />;
+    }
+
     return (
 
         <div className="app">
@@ -238,6 +316,10 @@ function App() {
             <Navbar
                 activeSection={activeSection}
                 onNavigate={handleNavigation}
+                user={user}
+                onLogout={handleLogout}
+                onClearData={handleClearData}
+                onDeleteAccount={handleDeleteAccount}
             />
 
 
@@ -346,6 +428,8 @@ function App() {
                     STATS
                 ================================= */}
 
+                {historyError && <div className="history-notice" role="status">{historyError}</div>}
+                {historyLoading && <div className="history-loading"><span className="auth-spinner" /> Loading your saved screening history…</div>}
                 <StatsCards
                     candidates={candidates}
                 />
