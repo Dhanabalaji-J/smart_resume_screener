@@ -42,7 +42,7 @@ router.post("/analyze", (req, res) => {
     }
 });
 
-router.get("/test-gemini", async (req, res) => {
+router.get("/test-gemini", authenticateToken, async (req, res) => {
     try {
         const result = await testGemini();
 
