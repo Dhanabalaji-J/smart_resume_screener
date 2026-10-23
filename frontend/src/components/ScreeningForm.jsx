@@ -1,5 +1,5 @@
 import { useState } from "react";
-import axios from "axios";
+import api from "../services/session";
 
 function ScreeningForm({
     onAnalysisComplete,
@@ -109,10 +109,7 @@ if (!API_URL) {
     );
 }
 
-const uploadResponse = await axios.post(
-    `${API_URL}/api/resume/upload`,
-    formData
-);
+const uploadResponse = await api.post("/resume/upload", formData);
 
 const parsedResume = uploadResponse.data.parsedResume;
 
@@ -127,8 +124,7 @@ if (!parsedResume) {
             // =====================================
 
             const matchResponse =
-                await axios.post(
-                    `${import.meta.env.VITE_API_URL}/api/job/match`,
+                await api.post("/job/match",
                     {
                         name: resumeFile.name
                             .replace(/\.pdf$/i, ""),
