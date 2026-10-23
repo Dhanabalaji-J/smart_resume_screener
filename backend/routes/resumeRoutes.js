@@ -56,6 +56,11 @@ router.post("/upload", upload.single("resume"), async (req, res) => {
             message: "Failed to process resume",
             error: error.message
         });
+    } finally {
+        // Uploaded PDFs are temporary input only; never leave them on disk.
+        if (req.file?.path) {
+            fs.promises.unlink(req.file.path).catch(() => {});
+        }
     }
 });
 
